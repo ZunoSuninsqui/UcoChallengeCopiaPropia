@@ -1,0 +1,116 @@
+-- Table: public.pais
+
+-- DROP TABLE IF EXISTS public.pais;
+
+CREATE TABLE IF NOT EXISTS public.pais
+(
+    -- Inherited from table public.entidad_base: id uuid NOT NULL,
+    nombre character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT pais_pkey PRIMARY KEY (id),
+    CONSTRAINT pais_nombre_key UNIQUE (nombre)
+)
+    INHERITS (public.entidad_base)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.pais
+    OWNER to postgres;
+
+
+-- Table: public.departamento
+
+-- DROP TABLE IF EXISTS public.departamento;
+
+CREATE TABLE IF NOT EXISTS public.departamento
+(
+    -- Inherited from table public.entidad_base: id uuid NOT NULL,
+    nombre character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    pais_id uuid NOT NULL,
+    CONSTRAINT departamento_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_departamento_pais FOREIGN KEY (pais_id)
+        REFERENCES public.pais (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+    INHERITS (public.entidad_base)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.departamento
+    OWNER to postgres;
+
+-- Table: public.ciudad
+
+-- DROP TABLE IF EXISTS public.ciudad;
+
+CREATE TABLE IF NOT EXISTS public.ciudad
+(
+    -- Inherited from table public.entidad_base: id uuid NOT NULL,
+    nombre character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    departamento_id uuid NOT NULL,
+    CONSTRAINT ciudad_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_ciudad_departamento FOREIGN KEY (departamento_id)
+        REFERENCES public.departamento (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+)
+    INHERITS (public.entidad_base)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.ciudad
+    OWNER to postgres;
+
+-- Table: public.tipo_identificacion
+
+-- DROP TABLE IF EXISTS public.tipo_identificacion;
+
+CREATE TABLE IF NOT EXISTS public.tipo_identificacion
+(
+    id uuid NOT NULL,
+    nombre character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    codigo character varying(10) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT tipo_identificacion_pkey PRIMARY KEY (id),
+    CONSTRAINT tipo_identificacion_codigo_key UNIQUE (codigo)
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.tipo_identificacion
+    OWNER to postgres;
+
+
+-- Table: public.usuario
+
+-- DROP TABLE IF EXISTS public.usuario;
+
+CREATE TABLE IF NOT EXISTS public.usuario
+(
+    id uuid NOT NULL,
+    tipo_identificacion_id uuid NOT NULL,
+    numero_identificacion character varying(25) COLLATE pg_catalog."default" NOT NULL,
+    primer_nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    segundo_nombre character varying(20) COLLATE pg_catalog."default",
+    primer_apellido character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    segundo_apellido character varying(20) COLLATE pg_catalog."default",
+    ciudad_residencia_id uuid NOT NULL,
+    correo_electronico character varying(250) COLLATE pg_catalog."default" NOT NULL,
+    numero_telefono_movil character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    correo_electronico_confirmado boolean DEFAULT false,
+    numero_telefono_movil_confirmado boolean DEFAULT false,
+    CONSTRAINT usuario_pkey PRIMARY KEY (id),
+    CONSTRAINT usuario_correo_electronico_key UNIQUE (correo_electronico),
+    CONSTRAINT usuario_ciudad_residencia_id_fkey FOREIGN KEY (ciudad_residencia_id)
+        REFERENCES public.ciudad (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT usuario_tipo_identificacion_id_fkey FOREIGN KEY (tipo_identificacion_id)
+        REFERENCES public.tipo_identificacion (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.usuario
+    OWNER to postgres;

@@ -1,0 +1,91 @@
+/* App specific overrides and page layout helpers */
+.app-shell {
+  min-height: 100vh;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  background: transparent;
+}
+
+/* Topbar */
+.topbar {
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding: 0 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand .logo {
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  background: linear-gradient(90deg,var(--accent),var(--accent-2));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-weight:700;
+}
+.brand .title {
+  font-weight:700;
+  font-size:15px;
+  letter-spacing:0.2px;
+}
+
+/* content area */
+.page {
+  display:block;
+  padding-top: 18px;
+}
+
+/* dashboard header buttons */
+.header-actions {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+/* small badges */
+.badge {
+  background: rgba(255,255,255,0.04);
+  padding:6px 10px;
+  border-radius: 999px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* user list card */
+.user-list-card { padding: 14px; }
+
+/* forms inside cards: reduce padding for compact view */
+.card .form { gap:10px; }
+
+/* responsive tweaks for ASUS TUF F15 typical screen:
+   width ~ 1920x1080 but we keep designs adaptive
+*/
+@media (min-width: 1400px){
+  .container { padding-left: 44px; padding-right:44px; }
+}
+
+/* small helper for empty states */
+.empty-state {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-items:center;
+  justify-content:center;
+  padding:36px;
+  color:var(--muted);
+}
+
+/* success / danger small text */
+.text-success { color: var(--success); font-weight:600; }
+.text-danger { color: var(--danger); font-weight:600; }

@@ -1,0 +1,530 @@
+/* --------------------- Reset & Variables --------------------- */
+:root{
+  --bg: #0f1115;
+  --panel: #141519;
+  --muted: #9aa0a6;
+  --text: #e6eef6;
+  --accent: #27a0ff; /* azul tecnológico */
+  --accent-2: #7b61ff; /* morado suave para degradados */
+  --success: #3cd671;
+  --danger: #ff6b6b;
+  --glass: rgba(255,255,255,0.03);
+  --card-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --fw-regular: 400;
+  --fw-medium: 600;
+  --fw-bold: 700;
+  --max-width: 1200px;
+  --page-padding: 28px;
+  --transition-fast: 200ms cubic-bezier(.22,.9,.35,1);
+  --transition-smooth: 350ms cubic-bezier(.16,.84,.26,1);
+  --glass-border: rgba(255,255,255,0.04);
+  --input-height: 46px;
+  --table-row-hover: rgba(255,255,255,0.02);
+}
+
+/* Base reset */
+*{box-sizing:border-box}
+html,body,#root{
+  height:100%;
+}
+body{
+  margin:0;
+  padding:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(180deg, var(--bg) 0%, #0b0b0d 100%);
+  color: var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color: transparent;
+  line-height:1.4;
+}
+
+/* Utility container to center app */
+.app-root{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 48px 20px;
+}
+
+/* Constrain content */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--page-padding);
+}
+
+/* --------------------- Common components --------------------- */
+
+/* Cards / Panels */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--glass-border);
+  padding: 22px;
+  transition: transform var(--transition-smooth), box-shadow var(--transition-fast);
+  backdrop-filter: blur(6px) saturate(120%);
+}
+.card:hover{
+  transform: translateY(-4px);
+}
+
+/* Headings */
+.h1 {
+  font-size: 20px;
+  font-weight: var(--fw-bold);
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+.h2 { font-size: 16px; font-weight: var(--fw-medium); color: var(--muted); margin:0 0 12px 0; }
+
+/* Small muted text */
+.muted { color: var(--muted); font-size: 13px; }
+
+/* --------------------- Form styles --------------------- */
+.form {
+  /* Antes era flex; lo hacemos block para forzar que cada field quede en su propia línea */
+  display: block;
+  margin: 0;
+}
+.form > * { margin-bottom: 12px; }
+.input-row { display:flex; gap:12px; }
+.input {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  height: var(--input-height);
+  border-radius: var(--radius-sm);
+  padding: 0 12px;
+  color: var(--text);
+  outline: none;
+  font-size: 14px;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  display:flex;
+  align-items:center;
+}
+.input:focus{
+  border-color: rgba(39,160,255,0.9);
+  box-shadow: 0 4px 22px rgba(39,160,255,0.06);
+  transform: translateY(-1px);
+}
+.input.small{ height:36px; font-size:13px; padding:0 10px; }
+
+/* labels */
+.label {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  display:block;
+  font-weight: 600; /* más visible */
+}
+
+/* helper text bajo label */
+.helper { font-size: 12px; color: var(--muted); margin-top:6px; }
+
+/* Form helper / error - compact */
+.error { color: var(--danger); font-size: 12px; margin:6px 0 0 4px; line-height:1; }
+
+/* Buttons */
+.btn {
+  height: 46px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: var(--fw-medium);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  user-select: none;
+  background: linear-gradient(90deg,var(--accent),var(--accent-2));
+  color: white;
+  box-shadow: 0 8px 28px rgba(123,97,255,0.08);
+}
+.btn:active{ transform: translateY(1px) scale(.998) }
+.btn:disabled{ opacity: .5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* Ghost / neutral */
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+}
+
+/* OAuth Buttons (GitHub + Google) */
+.oauth-row { display:flex; gap:12px; }
+.oauth-btn {
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+  padding: 0 14px;
+  height: 46px;
+  border-radius: 10px;
+  background: var(--panel);
+  border: 1px solid var(--glass-border);
+  cursor:pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  color: var(--text);
+}
+.oauth-btn .icon {
+  width:20px;
+  height:20px;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  flex-shrink:0;
+}
+/* expects SVG files at ./assets */
+.oauth-github .icon{ background-image: url('./assets/github.svg'); }
+.oauth-google .icon{ background-image: url('./assets/google.svg'); }
+.oauth-btn:hover{ transform: translateY(-3px) }
+
+/* Tertiary small action */
+.action-link {
+  font-size:13px;
+  color: var(--muted);
+  cursor:pointer;
+  transition: color var(--transition-fast);
+}
+.action-link:hover{ color: var(--text) }
+
+/* --------------------- Layout specific --------------------- */
+
+/* Login card centered */
+.login-layout{
+  width:100%;
+  max-width:920px;
+  display:grid;
+  grid-template-columns: 1fr 420px;
+  gap:26px;
+  align-items:center;
+}
+.login-hero{
+  padding: 26px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(123,97,255,0.05), rgba(39,160,255,0.02));
+  min-height: 380px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:14px;
+}
+
+/* Dashboard layout */
+.app-grid {
+  display:grid;
+  grid-template-columns: 240px 1fr;
+  gap:20px;
+  align-items:start;
+}
+
+/* Navbar / Sidebar */
+.sidebar {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  padding: 18px;
+  border-radius: var(--radius);
+  height: calc(100vh - 170px);
+  position: sticky;
+  top: 60px;
+  overflow:auto;
+}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  border-radius:10px;
+  color:var(--muted);
+  cursor:pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.nav-item.active{
+  color:var(--text);
+  background: linear-gradient(90deg, rgba(39,160,255,0.08), rgba(123,97,255,0.03));
+}
+
+/* Panel content */
+.panel-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+/* --------------------- Table (UserTable) --------------------- */
+.table {
+  width:100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 10px;
+  background: transparent;
+}
+.table thead th {
+  text-align:left;
+  font-size:13px;
+  color:var(--muted);
+  padding:12px 14px;
+  user-select:none;
+}
+.table tbody td{
+  padding:12px 14px;
+  border-top: 1px solid rgba(255,255,255,0.02);
+  font-size:14px;
+  color:var(--text);
+}
+.table tbody tr:hover{ background: var(--table-row-hover); transform:none; }
+
+/* Make table components take better advantage of available space */
+.bg-\[\#1E1E1E\] table, .card table, .table { width:100%; table-layout: auto; }
+.table thead th, .table tbody td { padding: 10px 12px; }
+.table thead th { white-space:nowrap; }
+.table tbody td { white-space:normal; }
+
+/* reduce padding of table container so it fits more horizontally */
+.bg-\[\#1E1E1E\] { padding: 0; }
+
+/* sortable header indicator */
+.th-sort {
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  cursor:pointer;
+}
+.sort-icon { width:12px; height:12px; opacity:.6 }
+
+/* pagination */
+.pagination {
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-top:12px;
+}
+.page-btn {
+  min-width:36px;
+  height:36px;
+  padding:0 10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:8px;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(90deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+  color: var(--text);
+  cursor:pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.page-btn[disabled] { opacity:0.45; cursor:not-allowed; transform:none; }
+.page-btn:hover:not([disabled]) { background: rgba(255,255,255,0.02); transform: translateY(-2px); }
+
+/* Resaltar sutilmente el número de página actual */
+.page-btn[aria-current="page"] {
+  background: linear-gradient(90deg, rgba(123,97,255,0.18), rgba(39,160,255,0.08));
+  color: #fff;
+  border-color: rgba(123,97,255,0.28);
+  box-shadow: 0 6px 18px rgba(123,97,255,0.08);
+  transform: translateY(-2px) scale(1.03);
+}
+
+/* Make prev/next icons a bit larger and clearer */
+.page-btn svg { opacity: 0.9; }
+.page-btn.prev-next { width:40px; height:40px; }
+
+/* search input */
+.search {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  width:100%;
+}
+.search .input { width:640px; max-width:100%; }
+
+/* utility to allow long text to wrap inside table cells */
+.break-words { word-break: break-word; }
+
+/* --------------------- Forms for Register user --------------------- */
+.form-columns {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+/* Two-column form grid used by UserForm */
+.form-grid { display:flex; flex-direction:column; gap:14px; }
+.grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; align-items:start; }
+.grid-2 .field { display:flex; flex-direction:column; gap:8px; }
+
+/* Ensure all inputs/selects have the same height and visual weight */
+.form .input, .form select.input { height: var(--input-height); }
+.form .input { border-radius: 10px; }
+
+/* Make <option> text dark when dropdown opens (white background) so it's readable */
+select.input option {
+  color: #0b0b0d; /* near-black for readability */
+  background: #ffffff;
+}
+
+/* For some browsers, also force select popup list items to use dark text */
+select.input::-ms-expand { color: #0b0b0d; }
+
+/* Make placeholders slightly muted, consistent font-size */
+.form .input::placeholder { color: rgba(255,255,255,0.45); font-size:14px; }
+
+/* Align the submit button to the left of the form container */
+.form .btn { align-self:flex-start; margin-top:8px; }
+
+/* Responsive: stack fields on small screens */
+@media (max-width: 720px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .buttons-stack, .image-frame { max-width:100%; }
+}
+
+/* --------------------- Small screens --------------------- */
+@media (max-width: 960px){
+  .login-layout{ grid-template-columns: 1fr; padding:8px; }
+  .app-grid { grid-template-columns: 1fr; }
+  .sidebar{ height:auto; position:relative; top:0; }
+  .search .input{ width:100%; }
+}
+
+/* --------------------- Micro animations --------------------- */
+@keyframes float {
+  0%{ transform: translateY(0px) }
+  50%{ transform: translateY(-6px) }
+  100%{ transform: translateY(0px) }
+}
+.logo-float{ animation: float 6s ease-in-out infinite; }
+
+/* small utilities */
+.flex { display:flex; }
+.items-center { align-items:center; }
+.justify-between { justify-content:space-between; }
+.gap-8 { gap:8px; }
+.mt-8 { margin-top:8px; }
+.mb-12 { margin-bottom:12px; }
+.text-xs { font-size:12px; color:var(--muted); }
+
+/* Force-hide any leftover sidebar markup to remove ese "cuadro" izquierdo */
+.sidebar {
+  display: none !important;
+}
+
+/* Small utility classes que faltaban y causaban que los botones se mostraran en fila */
+.flex-col { flex-direction: column; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+
+/* max-width helpers usados en componentes */
+.max-w-sm { max-width: 400px; }
+.max-w-xs { max-width: 320px; }
+
+/* Aseguramos que los botones ocupen el ancho del contenedor cuando se usan en columna */
+.buttons-column { display:flex; flex-direction:column; align-items:center; gap:20px; width:100%; }
+.buttons-column > .w-full { max-width: 320px; width:100%; }
+
+/* si quedara algún aside con altura fija, evitar que ocupe espacio */
+.app-grid { grid-template-columns: 1fr !important; }
+.sidebar{ height: auto; }
+
+/* --------------------- Dashboard two-column layout inside the card --------------------- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 480px; /* izquierda flexible, derecha con ancho fijo para la imagen */
+  gap: 28px;
+  align-items: center;
+}
+
+/* Alineamos contenido izquierdo y forzamos la pila de botones */
+.dashboard-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-right: 8px;
+}
+
+/* Contenedor de botones: ancho fijo máximo para uniformidad y centrado relativo a la columna */
+.buttons-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;            /* espacio entre botones */
+  width: 360px;         /* todos los botones comparten el mismo ancho */
+  max-width: 100%;
+}
+
+/* Forzar que cada botón ocupe todo el ancho del contenedor y tenga la misma altura */
+.panel-btn {
+  width: 100%;
+  box-sizing: border-box;
+}
+.panel-btn button {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding-left: 56px; /* espacio para el icono absoluto */
+  padding-right: 20px;
+  font-size: 15px;
+  border-radius: 12px;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg,#3ab7ff,#915cff); /* keep gradient look */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(11,11,12,0.45);
+}
+
+/* centered label container */
+.panel-btn .btn-content {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* icon placed absolute on the left so it doesn't shift the centered label */
+.panel-btn .btn-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  opacity: 0.98;
+  pointer-events: none;
+}
+.panel-btn .btn-icon i { font-size: 16px; }
+
+/* ensure hover doesn't move label (remove translate effects) */
+.panel-btn button:hover { transform: none; }
+
+/* Make SVG brighter/saturated so colors appear correctly */
+.dashboard-right img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  /* PNG ya contiene los colores: no aplicar filtros */
+  filter: none;
+  opacity: 1;
+}
+
+/* Responsive: en pantallas pequeñas apilamos columna */
+@media (max-width: 920px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .dashboard-right { margin-top: 18px; }
+}
+
+/* If any leftover sidebar exists, hide it */
+.sidebar { display:none !important; }
