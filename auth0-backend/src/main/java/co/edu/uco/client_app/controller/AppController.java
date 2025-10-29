@@ -1,5 +1,7 @@
 package co.edu.uco.client_app.controller;
 
+import co.edu.uco.client_app.auth.Auth0TokenResponse;
+import co.edu.uco.client_app.auth.Auth0TokenService;
 import co.edu.uco.client_app.models.Message;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -28,6 +30,11 @@ import java.util.stream.Collectors;
 public class AppController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AppController.class);
+    private final Auth0TokenService tokenService;
+
+    public AppController(Auth0TokenService tokenService) {
+        this.tokenService = tokenService;
+    }
 
     @GetMapping("/list")
     public List<Message> list(HttpServletRequest request, JwtAuthenticationToken authentication) {
@@ -49,12 +56,16 @@ public class AppController {
 
     @GetMapping("/authorized")
 
-    public Map<String, String> authorized(
+    public Auth0TokenResponse authorized(
             @RequestParam String code,
+            @RequestParam(value = "code_verifier", required = false) String codeVerifier,
+            @RequestParam(value = "redirect_uri", required = false) String redirectUri,
             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization
     ) {
         LOGGER.info("[Backend] Solicitud publica /authorized - token presente: {}", authorization != null);
-        return Collections.singletonMap("code", code);
+        Auth0TokenResponse response = tokenService.exchangeAuthorizationCode(code, codeVerifier, redirectUri);
+        LOGGER.info("[Backend] Intercambio exitoso, se recibió access_token: {}", response.accessToken() != null);
+        return response;
     }
 
     @GetMapping("/debug/token")
