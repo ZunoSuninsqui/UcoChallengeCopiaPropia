@@ -1,6 +1,8 @@
 
 import LoginForm from '../components/LoginForm';
 import { motion } from 'framer-motion';
+// Referencia para que ESLint reconozca el uso en JSX
+void motion;
 
 /**
  * Página principal de login del administrador

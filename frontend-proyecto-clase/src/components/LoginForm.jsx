@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../App';
-import { useAuth0 } from '@auth0/auth0-react';
 import { motion } from 'framer-motion';
-
-import OAuthButtons from './OAuthButtons';
-import { auth0Config, buildLoginScope } from '../config/auth0';
+import { authService } from '../services/auth';
+// Referencia explícita para que ESLint detecte uso (se usa en JSX como <motion.xxx />)
+void motion;
 
 export default function LoginForm() {
   const { loginWithCredentials } = useAuth();
-  const { loginWithRedirect } = useAuth0();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -38,30 +35,23 @@ export default function LoginForm() {
 
     setSubmitting(true);
     try {
-      await loginWithCredentials({ email, name: 'Administrador' });
+      const response = await authService.login({ email, password });
+      await loginWithCredentials(response.user);
     } catch (err) {
-      console.error('Error al simular login:', err);
+      console.error('Error al hacer login:', err);
+      setErrors({ general: 'Error al iniciar sesión. Por favor, verifica tus credenciales.' });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleOAuth = async (provider) => {
+  const handleOktaLogin = async () => {
     setSubmitting(true);
     try {
-      const connection = provider === 'google' ? 'google-oauth2' : 'github';
-      await loginWithRedirect({
-        appState: { returnTo: window.location.pathname },
-        authorizationParams: {
-          connection,
-          prompt: 'login',
-          redirect_uri: window.location.origin,
-          scope: buildLoginScope(),
-          ...(auth0Config.audience ? { audience: auth0Config.audience } : {}),
-        },
-      });
+      await authService.loginWithOkta();
     } catch (err) {
-      console.error('Error iniciando login con Auth0:', err);
+      console.error('Error iniciando login con Okta:', err);
+      setErrors({ general: 'Error al iniciar el proceso de login con Okta.' });
     } finally {
       setSubmitting(false);
     }
@@ -118,11 +108,20 @@ export default function LoginForm() {
         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
       </div>
 
-      <OAuthButtons
-        onGoogle={() => handleOAuth('google')}
-        onGithub={() => handleOAuth('github')}
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={handleOktaLogin}
         disabled={submitting}
-      />
+      >
+        {submitting ? 'Iniciando...' : 'Iniciar sesión con Okta'}
+      </button>
+
+      {errors.general && (
+        <div className="error" style={{ marginTop: '10px', textAlign: 'center' }}>
+          {errors.general}
+        </div>
+      )}
 
       <p className="muted" style={{ fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
         Solo administradores autorizados pueden acceder.

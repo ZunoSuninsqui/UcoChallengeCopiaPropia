@@ -1,153 +1,99 @@
+/* eslint-disable react-refresh/only-export-components */
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { useAuth0 } from '@auth0/auth0-react';
+import { authService } from './services/auth';
 
-import { setupInterceptors } from './services/axios-interceptor';
-import { auth0Config, buildLoginScope, buildResourceAuthorizationParams, resolveRoleClaimCandidates } from './config/auth0';
+import apiClient, { setupInterceptors } from './services/axios-interceptor';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RegisterUserPage from './pages/RegisterUserPage';
 import UserSearchPage from './pages/UserSearchPage';
+import LandingPage from './pages/LandingPage';
+import Navbar from './components/Navbar';
 
 const AuthContext = createContext({
   user: null,
-  loginWithCredentials: async () => { },
-  logout: () => { },
+  isAuthenticated: false,
+  loginWithCredentials: async () => {},
+  logout: () => {},
   isAdmin: false,
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 function PrivateRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth0();
-  const { isAdmin } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
-  if (isLoading) {
-    return <div>Cargando...</div>;
+  if (isLoading) return <div>Cargando...</div>;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
-
-  if (!isAuthenticated || !isAdmin) {
-    return <Navigate to="/login" replace />;
-  }
-
   return children;
 }
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const hasShownRoleErrorRef = useRef(false);
-
-  const {
-    user: auth0User,
-    isAuthenticated,
-    isLoading,
-    loginWithRedirect,
-    logout: auth0Logout,
-    getAccessTokenSilently,
-    getIdTokenClaims,
-    error: auth0Error,
-  } = useAuth0();
-
-  const resourceAuthorizationParams = useMemo(() => buildResourceAuthorizationParams(), []);
-  const loginScope = useMemo(() => buildLoginScope(), []);
-  const roleClaimCandidates = useMemo(() => resolveRoleClaimCandidates(), []);
 
   useEffect(() => {
-    if (auth0Error) {
-      console.error('Auth0 error:', auth0Error);
-    }
+    if (auth0Error) console.error('Auth0 error detectado:', auth0Error);
   }, [auth0Error]);
 
   useEffect(() => {
     setupInterceptors(async () => {
       try {
-        return await getAccessTokenSilently({
-          authorizationParams: resourceAuthorizationParams,
-        });
-      } catch (error) {
-        if (import.meta.env.DEV) {
-          console.warn('No fue posible obtener el token de acceso:', error);
-        }
+        const token = await getAccessTokenSilently({ authorizationParams: resourceAuthorizationParams });
+        return token;
+      } catch {
         return null;
       }
     });
   }, [getAccessTokenSilently, resourceAuthorizationParams]);
 
   const decodeToken = useCallback((token) => {
-    if (!token) {
-      return null;
-    }
-
+    if (!token) return null;
     try {
       const [, payload] = token.split('.');
-      if (!payload) {
-        return null;
-      }
-
+      if (!payload) return null;
       const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
       const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
-
       const base64Decode = (value) => {
-        if (typeof atob === 'function') {
-          return atob(value);
-        }
-        if (typeof Buffer === 'function') {
-          return Buffer.from(value, 'base64').toString('binary');
-        }
-        throw new Error('No hay un decodificador Base64 disponible.');
+        if (typeof atob === 'function') return atob(value);
+        if (typeof globalThis !== 'undefined' && typeof globalThis.Buffer === 'function') return globalThis.Buffer.from(value, 'base64').toString('utf8');
+        throw new Error('No base64 decoder available');
       };
-
-      const binary = base64Decode(padded);
-      const json = decodeURIComponent(
-        binary
-          .split('')
-          .map((char) => `%${`00${char.charCodeAt(0).toString(16)}`.slice(-2)}`)
-          .join(''),
-      );
-
-      return JSON.parse(json);
-    } catch (error) {
-      console.warn('No se pudo decodificar el token JWT:', error);
+      return JSON.parse(base64Decode(padded));
+    } catch (err) {
+      console.warn('decodeToken failed', err);
       return null;
     }
   }, []);
 
-  const collectRoles = useCallback((...sources) => {
+  const collectRoles = useCallback((idTokenPayload, decodedIdToken, decodedAccessToken) => {
     const roles = new Set();
-
-    sources
-      .filter(Boolean)
-      .forEach((claims) => {
-        roleClaimCandidates.forEach((claimName) => {
-          const value = claims[claimName];
-          if (!value) return;
-
-          if (Array.isArray(value)) {
-            value.filter((item) => typeof item === 'string').forEach((item) => roles.add(item));
-            return;
-          }
-
-          if (typeof value === 'string') {
-            value
-              .split(/\s+/)
-              .filter(Boolean)
-              .forEach((item) => roles.add(item));
-          }
-        });
-      });
-
+    const sources = [idTokenPayload, decodedIdToken, decodedAccessToken];
+    for (const src of sources) {
+      if (!src) continue;
+      for (const candidate of roleClaimCandidates) {
+        const value = src[candidate];
+        if (!value) continue;
+        if (Array.isArray(value)) {
+          value.filter((v) => typeof v === 'string').forEach((v) => roles.add(v));
+        } else if (typeof value === 'string') {
+          value.split(/\s+/).filter(Boolean).forEach((v) => roles.add(v));
+        }
+      }
+    }
     return Array.from(roles);
   }, [roleClaimCandidates]);
 
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
-
+    if (isLoading) return;
     const syncSession = async () => {
       if (isAuthenticated && auth0User) {
         try {
@@ -160,6 +106,15 @@ export default function App() {
           const decodedIdToken = idToken?.__raw ? decodeToken(idToken.__raw) : null;
           const decodedAccessToken = decodeToken(accessToken);
 
+          const snapshot = {
+            retrievedAt: new Date().toISOString(),
+            idTokenRaw: idToken?.__raw || null,
+            accessTokenRaw: accessToken || null,
+            idTokenClaims: decodedIdToken,
+            accessTokenClaims: decodedAccessToken,
+          };
+          setTokenSnapshot(snapshot);
+
           const roles = collectRoles(idTokenPayload, decodedIdToken, decodedAccessToken);
           const hasAdminRole = roles.includes(auth0Config.adminRole);
 
@@ -171,12 +126,9 @@ export default function App() {
                 : 'Acceso denegado: tu cuenta no tiene el rol requerido para usar el panel.';
               setTimeout(() => window.alert(message), 250);
             }
-
             setUser(null);
             await auth0Logout?.({ logoutParams: { returnTo: window.location.origin } });
-            if (location.pathname !== '/login') {
-              navigate('/login', { replace: true });
-            }
+            if (location.pathname !== '/login') navigate('/login', { replace: true });
             return;
           }
 
@@ -190,25 +142,19 @@ export default function App() {
             isAdmin: true,
           });
 
-          if (location.pathname === '/login' || location.pathname === '/') {
-            navigate('/dashboard', { replace: true });
-          }
-
-          if (import.meta.env.DEV) {
-            console.debug('Auth0 session sincronizada', { roles });
-          }
+          if (location.pathname === '/login' || location.pathname === '/') navigate('/dashboard', { replace: true });
         } catch (error) {
           console.error('No fue posible sincronizar la sesión de Auth0:', error);
         }
       } else {
         setUser(null);
         hasShownRoleErrorRef.current = false;
-        if (location.pathname !== '/login' && location.pathname !== '/') {
-          navigate('/login', { replace: true });
-        }
+        hasVerifiedTokenRef.current = false;
+        setTokenSnapshot(null);
+        setTokenDiagnostics(null);
+        if (location.pathname !== '/login' && location.pathname !== '/') navigate('/login', { replace: true });
       }
     };
-
     syncSession();
   }, [
     auth0Logout,
@@ -224,109 +170,111 @@ export default function App() {
     resourceAuthorizationParams,
   ]);
 
-  const loginWithCredentials = useCallback(async ({ email }) => {
+  const verifyWithBackend = useCallback(async (reason = 'manual') => {
+    const traceId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     try {
-      await loginWithRedirect({
-        authorizationParams: {
-          redirect_uri: window.location.origin,
-          login_hint: email,
-          scope: loginScope,
-          ...(auth0Config.audience ? { audience: auth0Config.audience } : {}),
-        },
-      });
+      const response = await apiClient.get('/debug/token', { headers: { 'X-Debug-Trace': traceId } });
+      const diagnostics = { traceId, reason, at: new Date().toISOString(), data: response.data };
+      setTokenDiagnostics(diagnostics);
+      return diagnostics;
     } catch (error) {
-      console.error('Error iniciando sesión con Auth0:', error);
+      console.error('Error verificando el token con el backend:', error);
+      throw error;
     }
-  }, [loginWithRedirect, loginScope]);
+  }, []);
 
-  const logout = useCallback(() => {
+  useEffect(() => {
+    if (user?.isAdmin && !hasVerifiedTokenRef.current) {
+      hasVerifiedTokenRef.current = true;
+      verifyWithBackend('post-login').catch((e) => console.warn('Verificación automática falló:', e));
+    }
+  }, [user, verifyWithBackend]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const currentDebug = window.__AUTH0_DEBUG__ || {};
+    const debugApi = { ...currentDebug, tokens: tokenSnapshot, lastVerification: tokenDiagnostics, verifyNow: verifyWithBackend };
+    window.__AUTH0_DEBUG__ = debugApi;
+    return () => { if (window.__AUTH0_DEBUG__ === debugApi) delete window.__AUTH0_DEBUG__; };
+  }, [tokenSnapshot, tokenDiagnostics, verifyWithBackend]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = authService.getToken();
+      if (token) {
+        const currentUser = authService.getUser();
+        if (currentUser) {
+          setUser(currentUser);
+        }
+      }
+      setIsLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  const loginWithCredentials = async (userData) => {
+    setUser(userData);
+    const from = location.state?.from?.pathname || '/dashboard';
+    navigate(from, { replace: true });
+  };
+
+  const logout = async () => {
     try {
-      auth0Logout?.({ logoutParams: { returnTo: window.location.origin } });
+      await authService.logout();
     } finally {
       setUser(null);
       navigate('/login', { replace: true });
     }
-  }, [auth0Logout, navigate]);
+  };
 
-  const authValue = useMemo(() => ({
+  useEffect(() => {
+    // Manejo del callback de Okta
+    const handleOktaCallback = async () => {
+      const params = new URLSearchParams(location.search);
+      const code = params.get('code');
+      if (code) {
+        try {
+          const { user } = await authService.handleOktaCallback(code);
+          await loginWithCredentials(user);
+        } catch (error) {
+          console.error('Error procesando callback de Okta:', error);
+          navigate('/login', { replace: true });
+        }
+      }
+    };
+
+    if (location.pathname === '/callback') {
+      handleOktaCallback();
+    }
+  }, [location]);
+
+  const authValue = {
     user,
+    isAuthenticated: Boolean(user),
+    isAdmin: Boolean(user?.isAdmin),
     loginWithCredentials,
     logout,
-    isAdmin: Boolean(user?.isAdmin),
-  }), [loginWithCredentials, logout, user]);
+    isLoading
+  };
+
+  if (isLoading) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <AuthContext.Provider value={authValue}>
-      <div className="app-shell">
-        <header className="topbar card">
-          <div className="brand">
-            <div className="logo" aria-hidden />
-            <div>
-              <div className="title">Admin Panel</div>
-              <div className="text-xs muted">UCO Challenge</div>
-            </div>
-          </div>
-
-          <div className="header-actions">
-            {user ? (
-              <>
-                <div className="badge">{user.name}</div>
-                <button className="btn btn-ghost" onClick={logout} title="Cerrar sesión">
-                  Cerrar sesión
-                </button>
-              </>
-            ) : (
-              <div className="badge">No autorizado</div>
-            )}
-          </div>
-        </header>
-
-        <main className="container page">
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45 }}
-          >
-            <section style={{ minHeight: 520 }} className="card">
-              <Routes>
-                <Route path="/" element={<Navigate to="/login" replace />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route
-                  path="/dashboard"
-                  element={(
-                    <PrivateRoute>
-                      <DashboardPage />
-                    </PrivateRoute>
-                  )}
-                />
-                <Route
-                  path="/register-user"
-                  element={(
-                    <PrivateRoute>
-                      <RegisterUserPage />
-                    </PrivateRoute>
-                  )}
-                />
-                <Route
-                  path="/users"
-                  element={(
-                    <PrivateRoute>
-                      <UserSearchPage />
-                    </PrivateRoute>
-                  )}
-                />
-                <Route
-                  path="*"
-                  element={(
-                    <div className="empty-state">
-                      <h3 className="h1">Página no encontrada</h3>
-                      <p className="muted">Revisa la URL o vuelve al panel.</p>
-                    </div>
-                  )}
-                />
-              </Routes>
-            </section>
-          </motion.div>
+      <div className="min-h-screen bg-[#121212] text-gray-100">
+        <Navbar />
+        <main>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/callback" element={<div>Procesando autenticación...</div>} />
+            <Route path="/register" element={<RegisterUserPage />} />
+            <Route path="/search" element={<PrivateRoute><UserSearchPage /></PrivateRoute>} />
+            <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </main>
       </div>
     </AuthContext.Provider>

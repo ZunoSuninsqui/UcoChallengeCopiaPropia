@@ -1,0 +1,14 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          okta:
+            client-id: en1kMIo9YDqKfSPcEbOap6bOHnQkpk5u
+            client-secret: AsuFdNiPR91kbOja5SFvr46a4otOIwmmpvAh46OuKomQqLqzK2EwbDFcc8VyiRgJ
+            scope: openid, profile, email
+        provider:
+          okta:
+            issuer-uri: https://dev-x2nlunlga02cbz17.us.auth0.com/
+server:
+  port: 3000
