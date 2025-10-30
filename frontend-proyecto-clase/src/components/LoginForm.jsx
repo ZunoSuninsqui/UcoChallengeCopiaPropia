@@ -1,17 +1,25 @@
 import React, { useState } from 'react';
 import { useAuth } from '../App';
 import { motion } from 'framer-motion';
-import { authService } from '../services/auth';
-// Referencia explícita para que ESLint detecte uso (se usa en JSX como <motion.xxx />)
-void motion;
+import OAuthButtons from './OAuthButtons';
 
+/**
+ * Formulario de login de administrador.
+ * Incluye:
+ * - Validaciones básicas de email y contraseña
+ * - Integración con AuthContext para login simulado
+ * - Botones de OAuth (Google / GitHub)
+ */
 export default function LoginForm() {
-  const { loginWithCredentials } = useAuth();
+  const { loginWithCredentials, loginWithOAuth } = useAuth();
+
+  // estado del formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  // --- Validaciones frontend ---
   const validate = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,30 +36,27 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
+    const v = validate();
+    setErrors(v);
 
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(v).length > 0) return; // hay errores
 
     setSubmitting(true);
     try {
-      const response = await authService.login({ email, password });
-      await loginWithCredentials(response.user);
+      await loginWithCredentials({ email, name: 'Administrador' });
     } catch (err) {
-      console.error('Error al hacer login:', err);
-      setErrors({ general: 'Error al iniciar sesión. Por favor, verifica tus credenciales.' });
+      console.error('Error al simular login:', err);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleOktaLogin = async () => {
+  const handleOAuth = async (provider) => {
     setSubmitting(true);
     try {
-      await authService.loginWithOkta();
+      await loginWithOAuth(provider);
     } catch (err) {
-      console.error('Error iniciando login con Okta:', err);
-      setErrors({ general: 'Error al iniciar el proceso de login con Okta.' });
+      console.error('Error OAuth simulado:', err);
     } finally {
       setSubmitting(false);
     }
@@ -68,6 +73,7 @@ export default function LoginForm() {
       <h2 className="h1" style={{ marginBottom: '6px' }}>Iniciar sesión</h2>
       <p className="muted">Accede con tus credenciales de administrador</p>
 
+      {/* Campo de correo */}
       <div>
         <label htmlFor="email" className="label">Correo electrónico</label>
         <input
@@ -83,6 +89,7 @@ export default function LoginForm() {
         {errors.email && <div className="error">{errors.email}</div>}
       </div>
 
+      {/* Campo de contraseña */}
       <div>
         <label htmlFor="password" className="label">Contraseña</label>
         <input
@@ -98,30 +105,24 @@ export default function LoginForm() {
         {errors.password && <div className="error">{errors.password}</div>}
       </div>
 
+      {/* Botón principal */}
       <button type="submit" className="btn" disabled={submitting}>
         {submitting ? 'Accediendo...' : 'Ingresar'}
       </button>
 
+      {/* Línea divisoria */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '10px 0' }}>
         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
         <span className="muted" style={{ fontSize: '13px' }}>o continúa con</span>
         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
       </div>
 
-      <button
-        type="button"
-        className="btn btn-secondary"
-        onClick={handleOktaLogin}
+      {/* Botones de OAuth (Google y GitHub) */}
+      <OAuthButtons
+        onGoogle={() => handleOAuth('google')}
+        onGithub={() => handleOAuth('github')}
         disabled={submitting}
-      >
-        {submitting ? 'Iniciando...' : 'Iniciar sesión con Okta'}
-      </button>
-
-      {errors.general && (
-        <div className="error" style={{ marginTop: '10px', textAlign: 'center' }}>
-          {errors.general}
-        </div>
-      )}
+      />
 
       <p className="muted" style={{ fontSize: '12px', textAlign: 'center', marginTop: '8px' }}>
         Solo administradores autorizados pueden acceder.

@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 // import Navbar from "../components/Navbar";  <-- eliminado
 import UserForm from "../components/UserForm";
 import { motion } from "framer-motion";
-// Referencia para que ESLint reconozca el uso en JSX
-void motion;
 
 const RegisterUserPage = () => {
   const [submittedData, setSubmittedData] = useState(null);
