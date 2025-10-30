@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import UserTable from "../components/UserTable";
 import { getUsers } from "../services/api";
 import { motion } from "framer-motion";
-// Referencia para que ESLint reconozca el uso en JSX
-void motion;
 import { Search } from "lucide-react";
 
 

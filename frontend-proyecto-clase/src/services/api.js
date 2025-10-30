@@ -1,21 +1,31 @@
-import api from './axios-interceptor';
+/**
+ * Simulación de un módulo de conexión API.
+ * Más adelante se reemplazará por peticiones reales a un backend (Node, Spring, etc.)
+ */
 
-
+const API_BASE_URL = "https://api.example.com"; // Placeholder temporal
 
 // --------------------- FUNCIONES DE AUTENTICACIÓN --------------------- //
 
 /**
- * Realiza la autenticación a través de Auth0
- * @param {string} token - Token de Auth0
+ * Simula un inicio de sesión de administrador.
+ * @param {string} email
+ * @param {string} password
  * @returns {Promise<Object>}
  */
-export const authenticateWithAuth0 = async (token) => {
-  try {
-    const response = await api.post('/auth/login', { token });
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || 'Error en la autenticación');
-  }
+export const loginAdmin = async (email, password) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (email === "admin@example.com" && password === "123456") {
+        resolve({
+          token: "fake-jwt-token",
+          user: { id: 1, nombre: "Administrador", rol: "admin", email },
+        });
+      } else {
+        reject(new Error("Credenciales inválidas."));
+      }
+    }, 800);
+  });
 };
 
 /**

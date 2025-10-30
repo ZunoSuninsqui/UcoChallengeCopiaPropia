@@ -6,8 +6,8 @@ const PanelButton = ({ label, icon, onClick, variant = "primary", className = ""
 
   const baseClass =
     variant === "primary"
-      ? `panel-btn btn ${justify} ${className}`
-      : `panel-btn btn-secondary ${justify} ${className}`;
+      ? `panel-btn btn ${className}`
+      : `panel-btn btn-secondary ${className}`;
 
   return (
     <div className={`w-full ${className}`}>

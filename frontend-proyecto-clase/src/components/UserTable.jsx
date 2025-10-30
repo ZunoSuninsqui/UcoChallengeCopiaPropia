@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-// Referencia para que ESLint reconozca el uso en JSX
-void motion;
 import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 const UserTable = ({ users, currentPage, totalPages, totalCount = 0, usersPerPage = 10, onPageChange }) => {

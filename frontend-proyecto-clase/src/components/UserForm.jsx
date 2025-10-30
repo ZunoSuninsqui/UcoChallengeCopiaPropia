@@ -1,9 +1,7 @@
 // ...existing code...
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-// Evitar falso positivo de ESLint (uso en JSX)
-void motion;
-import { validateEmail, validateRequired } from "../utils/validators";
+import { validateEmail, validateRequired, validateLength } from "../utils/validators";
 
 const UserForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
